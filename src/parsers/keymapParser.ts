@@ -31,26 +31,6 @@ export function parseKeymapC(content: string): ParsedKeymap {
 }
 
 /**
- * Extract layer names from enum definition
- */
-function extractLayerNames(content: string): string[] {
-  const enumMatch = content.match(/enum\s+layers\s*\{([^}]+)\}/);
-
-  if (!enumMatch) {
-    // If no enum found, try to extract from layer definitions
-    return [];
-  }
-
-  const enumContent = enumMatch[1];
-  const names = enumContent
-    .split(',')
-    .map(name => name.trim())
-    .filter(name => name.length > 0 && !name.startsWith('//'));
-
-  return names;
-}
-
-/**
  * Extract layers from keymaps content
  */
 function extractLayers(keymapsContent: string): Layer[] {

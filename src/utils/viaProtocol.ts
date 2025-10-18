@@ -89,19 +89,28 @@ export class VIADevice {
       throw new Error('Device not connected');
     }
 
-    // Send command via HID
-    await this.device.sendReport(0, command);
+    // Send command via HID (convert Uint8Array to ArrayBuffer)
+    await this.device.sendReport(0, command.buffer);
 
     // Wait for response
     return new Promise((resolve, reject) => {
+      if (!this.device) {
+        reject(new Error('Device disconnected'));
+        return;
+      }
+
       const timeout = setTimeout(() => {
-        this.device!.removeEventListener('inputreport', handler);
+        if (this.device) {
+          this.device.removeEventListener('inputreport', handler);
+        }
         reject(new Error('Response timeout'));
       }, 1000);
 
       const handler = (event: HIDInputReportEvent) => {
         clearTimeout(timeout);
-        this.device!.removeEventListener('inputreport', handler);
+        if (this.device) {
+          this.device.removeEventListener('inputreport', handler);
+        }
         resolve(new Uint8Array(event.data.buffer));
       };
 
