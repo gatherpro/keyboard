@@ -6,10 +6,7 @@ import { ParsedKeymap, Layer } from '../types';
  * @returns Parsed keymap object
  */
 export function parseKeymapC(content: string): ParsedKeymap {
-  // Step 1: Extract layer names from enum definition
-  const layerNames = extractLayerNames(content);
-
-  // Step 2: Find keymaps array
+  // Step 1: Find keymaps array
   const keymapsMatch = content.match(
     /const\s+uint16_t\s+PROGMEM\s+keymaps\s*\[\]\[MATRIX_ROWS\]\[MATRIX_COLS\]\s*=\s*\{([\s\S]*?)\n\};/
   );
@@ -23,7 +20,7 @@ export function parseKeymapC(content: string): ParsedKeymap {
   const keymapsEndIndex = keymapsStartIndex + keymapsMatch[0].length;
 
   // Step 3: Extract each layer's LAYOUT() content
-  const layers = extractLayers(keymapsContent, layerNames);
+  const layers = extractLayers(keymapsContent);
 
   return {
     layers,
@@ -56,7 +53,7 @@ function extractLayerNames(content: string): string[] {
 /**
  * Extract layers from keymaps content
  */
-function extractLayers(keymapsContent: string, layerNames: string[]): Layer[] {
+function extractLayers(keymapsContent: string): Layer[] {
   const layers: Layer[] = [];
 
   // Regular expression to match each layer definition
