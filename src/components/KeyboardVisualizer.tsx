@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../stores/useStore';
 import { getPrimaryLayout } from '../parsers/keyboardJsonParser';
-import { QMK_KEYCODES } from '../utils/keycodes';
+import { QMK_KEYCODES, findKeycode } from '../utils/keycodes';
 
 export function KeyboardVisualizer() {
   const {
@@ -38,6 +38,11 @@ export function KeyboardVisualizer() {
       setShowKeycodeSelector(false);
       selectKey(null);
     }
+  };
+
+  const getKeycodeDisplay = (keycode: string): string => {
+    const found = findKeycode(keycode);
+    return found ? found.display : keycode;
   };
 
   const SCALE = 50; // Scale factor for positioning
@@ -83,7 +88,7 @@ export function KeyboardVisualizer() {
               title={`Matrix: ${key.matrix[0]},${key.matrix[1]}`}
             >
               <span className="text-xs truncate p-1">
-                {currentLayer?.keys[index] || 'KC_NO'}
+                {getKeycodeDisplay(currentLayer?.keys[index] || 'KC_NO')}
               </span>
             </button>
           ))}

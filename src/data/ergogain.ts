@@ -54,8 +54,8 @@ export const ergogainKeyboard: KeyboardJson = {
         { matrix: [6, 4], x: 12, y: 2 },
         { matrix: [7, 3], x: 13, y: 2 },
 
-        { matrix: [7, 0], x: 9, y: 3 },
-        { matrix: [7, 1], x: 10, y: 3 }
+        { matrix: [7, 0], x: 8, y: 3 },
+        { matrix: [7, 1], x: 9, y: 3 }
       ]
     }
   }
