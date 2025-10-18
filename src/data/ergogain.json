@@ -2,6 +2,8 @@
   "manufacturer": "Atsumu Furuya",
   "keyboard_name": "ergogain",
   "maintainer": "Won-CCS",
+  "processor": "RP2040",
+  "bootloader": "rp2040",
   "layouts": {
     "LAYOUT": {
       "name": "ergogain",
