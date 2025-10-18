@@ -10,11 +10,11 @@ export const ergogainKeyboard: KeyboardJson = {
     LAYOUT: {
       name: "ergogain",
       layout: [
-        { matrix: [0, 0], x: 0, y: 0 },
-        { matrix: [0, 1], x: 1, y: 0 },
-        { matrix: [0, 2], x: 2, y: 0 },
-        { matrix: [0, 3], x: 3, y: 0 },
-        { matrix: [0, 4], x: 4, y: 0 },
+        { matrix: [0, 0], x: 1, y: 0 },
+        { matrix: [0, 1], x: 2, y: 0 },
+        { matrix: [0, 2], x: 3, y: 0 },
+        { matrix: [0, 3], x: 4, y: 0 },
+        { matrix: [0, 4], x: 5, y: 0 },
 
         { matrix: [1, 0], x: 0, y: 1 },
         { matrix: [1, 1], x: 1, y: 1 },
@@ -34,11 +34,11 @@ export const ergogainKeyboard: KeyboardJson = {
         { matrix: [3, 1], x: 3, y: 3 },
         { matrix: [3, 2], x: 4, y: 3 },
 
-        { matrix: [4, 0], x: 9, y: 0 },
-        { matrix: [4, 1], x: 10, y: 0 },
-        { matrix: [4, 2], x: 11, y: 0 },
-        { matrix: [4, 3], x: 12, y: 0 },
-        { matrix: [4, 4], x: 13, y: 0 },
+        { matrix: [4, 0], x: 8, y: 0 },
+        { matrix: [4, 1], x: 9, y: 0 },
+        { matrix: [4, 2], x: 10, y: 0 },
+        { matrix: [4, 3], x: 11, y: 0 },
+        { matrix: [4, 4], x: 12, y: 0 },
 
         { matrix: [5, 0], x: 8, y: 1 },
         { matrix: [5, 1], x: 9, y: 1 },
