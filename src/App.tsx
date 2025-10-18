@@ -9,7 +9,6 @@ function App() {
     viaConnected,
     connectVIA,
     disconnectVIA,
-    loadKeymapFromVIA,
     keyboardJson
   } = useStore();
 
@@ -38,15 +37,7 @@ function App() {
     if (viaConnected) {
       await disconnectVIA();
     } else {
-      const success = await connectVIA();
-      if (success && keyboardJson) {
-        try {
-          await loadKeymapFromVIA();
-          alert('Keymap loaded from VIA device!');
-        } catch (error) {
-          alert(`Failed to load keymap from device: ${error}`);
-        }
-      }
+      await connectVIA();
     }
   };
 

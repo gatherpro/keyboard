@@ -108,6 +108,46 @@ export const useStore = create<EditorState>((set, get) => ({
         if (deviceName.toLowerCase().includes('ergogain')) {
           set({ keyboardJson: ergogainKeyboard });
           console.log('Auto-loaded ergogain keyboard layout');
+
+          // Auto-load keymap from device
+          try {
+            const layout = Object.values(ergogainKeyboard.layouts)[0].layout;
+            const rows = Math.max(...layout.map(k => k.matrix[0])) + 1;
+            const cols = Math.max(...layout.map(k => k.matrix[1])) + 1;
+
+            const layerCount = await viaDevice.getLayerCount();
+            const layers: ParsedKeymap['layers'] = [];
+
+            for (let layer = 0; layer < layerCount; layer++) {
+              const matrixKeymap = await viaDevice.getLayerKeymap(layer, rows, cols);
+              const keys: string[] = [];
+
+              // Convert matrix format to layout format
+              for (const position of layout) {
+                const [row, col] = position.matrix;
+                const keycode = matrixKeymap[row][col];
+                keys.push(convertNumberToKeycode(keycode));
+              }
+
+              layers.push({
+                name: `Layer ${layer}`,
+                keys,
+              });
+            }
+
+            set({
+              parsedKeymap: {
+                layers,
+                originalCode: '',
+                keymapsStartIndex: 0,
+                keymapsEndIndex: 0,
+              },
+            });
+
+            console.log('Keymap auto-loaded from VIA device');
+          } catch (error) {
+            console.error('Failed to auto-load keymap:', error);
+          }
         }
 
         return true;
