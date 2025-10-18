@@ -89,8 +89,8 @@ export class VIADevice {
       throw new Error('Device not connected');
     }
 
-    // Send command via HID (convert Uint8Array to ArrayBuffer)
-    await this.device.sendReport(0, command.buffer);
+    // Send command via HID
+    await this.device.sendReport(0, command);
 
     // Wait for response
     return new Promise((resolve, reject) => {
