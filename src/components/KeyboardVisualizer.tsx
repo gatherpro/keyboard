@@ -50,14 +50,14 @@ export function KeyboardVisualizer() {
   return (
     <div className="space-y-4">
       {/* Layer Selector */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="bg-white p-4 rounded-lg shadow-lg border-2 border-orange-200">
+        <label className="block text-sm font-medium text-orange-800 mb-2">
           Layer
         </label>
         <select
           value={currentLayerIndex}
           onChange={(e) => setCurrentLayer(parseInt(e.target.value))}
-          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="block w-full px-3 py-2 border border-orange-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
         >
           {parsedKeymap.layers.map((layer, index) => (
             <option key={index} value={index}>
@@ -68,7 +68,7 @@ export function KeyboardVisualizer() {
       </div>
 
       {/* Keyboard Layout */}
-      <div className="bg-white p-6 rounded-lg shadow-md overflow-auto">
+      <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-orange-200 overflow-auto">
         <div className="relative" style={{ minWidth: '800px', minHeight: '400px' }}>
           {layout.layout.map((key, index) => (
             <button
@@ -76,8 +76,8 @@ export function KeyboardVisualizer() {
               onClick={() => handleKeyClick(index)}
               className={`absolute border-2 rounded flex items-center justify-center text-sm font-mono transition-colors ${
                 selectedKeyIndex === index
-                  ? 'border-blue-500 bg-blue-100'
-                  : 'border-gray-300 bg-white hover:bg-gray-50'
+                  ? 'border-orange-500 bg-orange-100'
+                  : 'border-orange-300 bg-white hover:bg-orange-50'
               }`}
               style={{
                 left: `${key.x * SCALE}px`,
@@ -98,14 +98,14 @@ export function KeyboardVisualizer() {
       {/* Keycode Selector Modal */}
       {showKeycodeSelector && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl max-h-96 overflow-auto">
-            <h3 className="text-lg font-bold mb-4">Select Keycode</h3>
+          <div className="bg-white p-6 rounded-lg shadow-xl border-2 border-orange-300 max-w-2xl max-h-96 overflow-auto">
+            <h3 className="text-lg font-bold text-orange-900 mb-4">Select Keycode</h3>
             <div className="grid grid-cols-6 gap-2">
               {QMK_KEYCODES.map((kc) => (
                 <button
                   key={kc.code}
                   onClick={() => handleKeycodeSelect(kc.code)}
-                  className="px-3 py-2 border border-gray-300 rounded hover:bg-blue-50 text-xs"
+                  className="px-3 py-2 border border-orange-300 rounded hover:bg-orange-100 text-xs"
                   title={kc.description}
                 >
                   {kc.display}
@@ -114,7 +114,7 @@ export function KeyboardVisualizer() {
             </div>
             <button
               onClick={() => setShowKeycodeSelector(false)}
-              className="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              className="mt-4 px-4 py-2 bg-orange-200 rounded hover:bg-orange-300"
             >
               Cancel
             </button>
