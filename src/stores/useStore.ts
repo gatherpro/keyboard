@@ -4,6 +4,7 @@ import { parseKeymapC, generateKeymapC } from '../parsers/keymapParser';
 import { parseKeyboardJson } from '../parsers/keyboardJsonParser';
 import { VIADevice, isWebSerialSupported } from '../utils/viaProtocol';
 import { parseKeycodeToNumber, convertNumberToKeycode } from '../utils/keycodeConverter';
+import ergogainJson from '../data/ergogain.json';
 
 const viaDevice = new VIADevice();
 
@@ -98,7 +99,17 @@ export const useStore = create<EditorState>((set, get) => ({
       const connected = await viaDevice.connect();
       if (connected) {
         set({ viaConnected: true });
-        console.log('VIA device connected');
+
+        // Get device name
+        const deviceName = viaDevice.getDeviceName();
+        console.log('VIA device connected:', deviceName);
+
+        // Auto-load keyboard.json for supported keyboards
+        if (deviceName.toLowerCase().includes('ergogain')) {
+          set({ keyboardJson: ergogainJson as KeyboardJson });
+          console.log('Auto-loaded ergogain keyboard layout');
+        }
+
         return true;
       }
       return false;

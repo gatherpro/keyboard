@@ -44,6 +44,10 @@ export class VIADevice {
     return this.device !== null && this.device.opened;
   }
 
+  getDeviceName(): string {
+    return this.device?.productName || 'Unknown Device';
+  }
+
   // VIA Protocol: Get Protocol Version
   async getProtocolVersion(): Promise<number> {
     const command = new Uint8Array(32);

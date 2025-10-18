@@ -63,12 +63,8 @@ function App() {
           </p>
         </header>
 
-        {/* File Uploader */}
-        <FileUploader />
-
         {/* VIA Connection */}
-        {keyboardJson && (
-          <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               VIA Live Connection
             </h2>
@@ -95,6 +91,15 @@ function App() {
                 ? 'Your keyboard is connected. Any keymap changes will be applied instantly.'
                 : 'Connect your VIA-enabled keyboard to edit keymaps in real-time without re-flashing.'}
             </p>
+        </div>
+
+        {/* File Uploader - Optional for unsupported keyboards */}
+        {viaConnected && !keyboardJson && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800 mb-2">
+              Keyboard layout not detected automatically. Upload keyboard.json for visual layout:
+            </p>
+            <FileUploader />
           </div>
         )}
 
