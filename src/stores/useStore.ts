@@ -4,7 +4,7 @@ import { parseKeymapC, generateKeymapC } from '../parsers/keymapParser';
 import { parseKeyboardJson } from '../parsers/keyboardJsonParser';
 import { VIADevice, isWebSerialSupported } from '../utils/viaProtocol';
 import { parseKeycodeToNumber, convertNumberToKeycode } from '../utils/keycodeConverter';
-import ergogainJson from '../data/ergogain.json';
+import { ergogainKeyboard } from '../data/ergogain';
 
 const viaDevice = new VIADevice();
 
@@ -106,7 +106,7 @@ export const useStore = create<EditorState>((set, get) => ({
 
         // Auto-load keyboard.json for supported keyboards
         if (deviceName.toLowerCase().includes('ergogain')) {
-          set({ keyboardJson: ergogainJson as KeyboardJson });
+          set({ keyboardJson: ergogainKeyboard });
           console.log('Auto-loaded ergogain keyboard layout');
         }
 
