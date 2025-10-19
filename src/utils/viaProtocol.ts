@@ -389,43 +389,48 @@ export class VIADevice {
     return specialKeys[keyName] || 0x2C; // Default to space
   }
 
-  // Helper: Encode shortcut key to VIA macro bytes
+  // Helper: Encode shortcut key to VIA macro bytes (SS_LCTL format)
   encodeShortcutMacro(shortcut: { ctrl: boolean; alt: boolean; shift: boolean; win: boolean; key: string }): number[] {
     const bytes: number[] = [];
 
-    // Modifier keycodes
+    // X_modifier keycodes (from send_string_keycodes.h)
     const modifiers = [];
-    if (shortcut.ctrl) modifiers.push(0xE0);  // KC_LCTRL
-    if (shortcut.shift) modifiers.push(0xE1); // KC_LSHIFT
-    if (shortcut.alt) modifiers.push(0xE2);   // KC_LALT
-    if (shortcut.win) modifiers.push(0xE3);   // KC_LGUI
+    if (shortcut.ctrl) modifiers.push(0xE0);  // X_LEFT_CTRL
+    if (shortcut.shift) modifiers.push(0xE1); // X_LEFT_SHIFT
+    if (shortcut.alt) modifiers.push(0xE2);   // X_LEFT_ALT
+    if (shortcut.win) modifiers.push(0xE3);   // X_LEFT_GUI
 
-    // Press modifiers
+    // Press modifiers: SS_DOWN(X_modifier)
     for (const modKeycode of modifiers) {
-      bytes.push(0x01); // Escape
+      bytes.push(0x01); // SS_QMK_PREFIX
       bytes.push(0x02); // SS_DOWN_CODE
       bytes.push(modKeycode);
     }
 
-    // Small delay to ensure modifiers are registered
-    bytes.push(0x01); // Escape
-    bytes.push(0x04); // SS_DELAY_CODE
-    bytes.push(10);   // 10ms delay
+    // Send the key
+    // For letters/numbers: send as ASCII character directly
+    // For special keys: use SS_TAP(X_keycode)
+    const keyName = shortcut.key;
 
-    // Tap main key
-    const keycode = this.keyNameToKeycode(shortcut.key);
-    bytes.push(0x01); // Escape
-    bytes.push(0x01); // SS_TAP_CODE
-    bytes.push(keycode);
+    // Letters A-Z -> lowercase ASCII
+    if (keyName.length === 1 && keyName >= 'A' && keyName <= 'Z') {
+      bytes.push(keyName.toLowerCase().charCodeAt(0)); // Direct ASCII character
+    }
+    // Numbers 0-9 -> ASCII
+    else if (keyName.length === 1 && keyName >= '0' && keyName <= '9') {
+      bytes.push(keyName.charCodeAt(0)); // Direct ASCII character
+    }
+    // Special keys -> SS_TAP(X_keycode)
+    else {
+      const xKeycode = this.keyNameToKeycode(keyName); // Get X_keycode
+      bytes.push(0x01); // SS_QMK_PREFIX
+      bytes.push(0x01); // SS_TAP_CODE
+      bytes.push(xKeycode); // X_keycode
+    }
 
-    // Small delay before releasing modifiers
-    bytes.push(0x01); // Escape
-    bytes.push(0x04); // SS_DELAY_CODE
-    bytes.push(10);   // 10ms delay
-
-    // Release modifiers (in reverse order)
+    // Release modifiers: SS_UP(X_modifier) in reverse order
     for (let i = modifiers.length - 1; i >= 0; i--) {
-      bytes.push(0x01); // Escape
+      bytes.push(0x01); // SS_QMK_PREFIX
       bytes.push(0x03); // SS_UP_CODE
       bytes.push(modifiers[i]);
     }
