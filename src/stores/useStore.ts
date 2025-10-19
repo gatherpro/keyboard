@@ -153,9 +153,15 @@ export const useStore = create<EditorState>((set, get) => ({
           // Auto-load macros from device (optimized)
           try {
             const macroTexts = await viaDevice.getAllMacros();
+
+            // Load saved macro names from localStorage
+            const deviceName = viaDevice.getDeviceName();
+            const savedNamesJson = localStorage.getItem(`macroNames_${deviceName}`);
+            const savedNames = savedNamesJson ? JSON.parse(savedNamesJson) : {};
+
             const macros = macroTexts.map((text, index) => ({
               id: index,
-              name: `マクロ ${index + 1}`,
+              name: savedNames[index] || `マクロ ${index + 1}`,
               text,
             }));
 
@@ -240,9 +246,15 @@ export const useStore = create<EditorState>((set, get) => ({
 
     try {
       const macroTexts = await viaDevice.getAllMacros(onProgress);
+
+      // Load saved macro names from localStorage
+      const deviceName = viaDevice.getDeviceName();
+      const savedNamesJson = localStorage.getItem(`macroNames_${deviceName}`);
+      const savedNames = savedNamesJson ? JSON.parse(savedNamesJson) : {};
+
       const macros = macroTexts.map((text, index) => ({
         id: index,
-        name: `マクロ ${index + 1}`,
+        name: savedNames[index] || `マクロ ${index + 1}`,
         text,
       }));
 
@@ -272,6 +284,13 @@ export const useStore = create<EditorState>((set, get) => ({
 
     set({ macros: newMacros });
 
+    // Save macro name to localStorage
+    const deviceName = viaDevice.getDeviceName();
+    const savedNamesJson = localStorage.getItem(`macroNames_${deviceName}`);
+    const savedNames = savedNamesJson ? JSON.parse(savedNamesJson) : {};
+    savedNames[id] = name;
+    localStorage.setItem(`macroNames_${deviceName}`, JSON.stringify(savedNames));
+
     // If VIA is connected, save to device
     if (viaConnected) {
       try {
@@ -291,6 +310,13 @@ export const useStore = create<EditorState>((set, get) => ({
     // Remove from local state
     const newMacros = macros.filter(m => m.id !== id);
     set({ macros: newMacros });
+
+    // Remove macro name from localStorage
+    const deviceName = viaDevice.getDeviceName();
+    const savedNamesJson = localStorage.getItem(`macroNames_${deviceName}`);
+    const savedNames = savedNamesJson ? JSON.parse(savedNamesJson) : {};
+    delete savedNames[id];
+    localStorage.setItem(`macroNames_${deviceName}`, JSON.stringify(savedNames));
 
     // If VIA is connected, clear on device
     if (viaConnected) {
