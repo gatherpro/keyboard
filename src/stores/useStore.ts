@@ -16,6 +16,7 @@ export const useStore = create<EditorState>((set, get) => ({
   currentLayerIndex: 0,
   selectedKeyIndex: null,
   viaConnected: false,
+  macros: [],
 
   // Actions
   loadKeyboardJson: (json: KeyboardJson) => {
@@ -213,6 +214,78 @@ export const useStore = create<EditorState>((set, get) => ({
     } catch (error) {
       console.error('Failed to load keymap from VIA:', error);
       throw error;
+    }
+  },
+
+  // Macro Actions
+  loadMacrosFromVIA: async () => {
+    if (!viaDevice.isConnected()) {
+      throw new Error('VIA device not connected');
+    }
+
+    try {
+      const macroTexts = await viaDevice.getAllMacros();
+      const macros = macroTexts.map((text, index) => ({
+        id: index,
+        name: `マクロ ${index + 1}`,
+        text,
+      }));
+
+      set({ macros });
+      console.log('Macros loaded from VIA device:', macros);
+    } catch (error) {
+      console.error('Failed to load macros from VIA:', error);
+      throw error;
+    }
+  },
+
+  saveMacro: async (id: number, name: string, text: string) => {
+    const { macros, viaConnected } = get();
+
+    // Update local state
+    const existingIndex = macros.findIndex(m => m.id === id);
+    let newMacros;
+
+    if (existingIndex >= 0) {
+      // Update existing macro
+      newMacros = [...macros];
+      newMacros[existingIndex] = { id, name, text };
+    } else {
+      // Add new macro
+      newMacros = [...macros, { id, name, text }];
+    }
+
+    set({ macros: newMacros });
+
+    // If VIA is connected, save to device
+    if (viaConnected) {
+      try {
+        await viaDevice.setMacro(id, text);
+        console.log('Macro saved to device:', { id, name, text });
+      } catch (error) {
+        console.error('Failed to save macro to device:', error);
+        alert(`マクロの保存に失敗しました: ${error}`);
+        throw error;
+      }
+    }
+  },
+
+  deleteMacro: async (id: number) => {
+    const { macros, viaConnected } = get();
+
+    // Remove from local state
+    const newMacros = macros.filter(m => m.id !== id);
+    set({ macros: newMacros });
+
+    // If VIA is connected, clear on device
+    if (viaConnected) {
+      try {
+        await viaDevice.setMacro(id, '');
+        console.log('Macro deleted from device:', id);
+      } catch (error) {
+        console.error('Failed to delete macro from device:', error);
+        alert(`マクロの削除に失敗しました: ${error}`);
+      }
     }
   },
 }));

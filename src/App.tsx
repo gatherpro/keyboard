@@ -1,6 +1,7 @@
 import { FileUploader } from './components/FileUploader';
 import { KeyboardVisualizer } from './components/KeyboardVisualizer';
 import { TestPad } from './components/TestPad';
+import { MacroEditor } from './components/MacroEditor';
 import { useStore } from './stores/useStore';
 
 function App() {
@@ -10,7 +11,11 @@ function App() {
     viaConnected,
     connectVIA,
     disconnectVIA,
-    keyboardJson
+    keyboardJson,
+    macros,
+    loadMacrosFromVIA,
+    saveMacro,
+    deleteMacro
   } = useStore();
 
   const handleDownload = () => {
@@ -108,6 +113,16 @@ function App() {
             <TestPad />
           </div>
         </div>
+
+        {/* Macro Editor - Only show when connected */}
+        {viaConnected && (
+          <MacroEditor
+            macros={macros}
+            onSaveMacro={saveMacro}
+            onDeleteMacro={deleteMacro}
+            onLoadMacros={loadMacrosFromVIA}
+          />
+        )}
 
         {/* Download Button */}
         {parsedKeymap && (

@@ -51,6 +51,9 @@ export interface EditorState {
   selectedKeyIndex: number | null;
   viaConnected: boolean;
 
+  // Macro state
+  macros: Macro[];
+
   // Actions
   loadKeyboardJson: (json: KeyboardJson) => void;
   loadKeymapC: (content: string) => void;
@@ -63,6 +66,11 @@ export interface EditorState {
   connectVIA: () => Promise<boolean>;
   disconnectVIA: () => Promise<void>;
   loadKeymapFromVIA: () => Promise<void>;
+
+  // Macro Actions
+  loadMacrosFromVIA: () => Promise<void>;
+  saveMacro: (id: number, name: string, text: string) => Promise<void>;
+  deleteMacro: (id: number) => Promise<void>;
 }
 
 // QMK Keycode categories
@@ -80,4 +88,12 @@ export interface Keycode {
   display: string;
   category: KeycodeCategory;
   description?: string;
+}
+
+// Macro Types
+
+export interface Macro {
+  id: number;
+  name: string;
+  text: string;
 }

@@ -144,6 +144,108 @@ export class VIADevice {
       }
     }
   }
+
+  // VIA Protocol: Get Macro Buffer Size
+  async getMacroBufferSize(): Promise<number> {
+    const command = new Uint8Array(32);
+    command[0] = 0x0D; // VIA_DYNAMIC_KEYMAP_MACRO_GET_BUFFER_SIZE
+    const response = await this.sendCommand(command);
+    return (response[1] << 8) | response[2];
+  }
+
+  // VIA Protocol: Get Macro Count
+  async getMacroCount(): Promise<number> {
+    const command = new Uint8Array(32);
+    command[0] = 0x0C; // VIA_DYNAMIC_KEYMAP_MACRO_GET_COUNT
+    const response = await this.sendCommand(command);
+    return response[1];
+  }
+
+  // VIA Protocol: Get Macro Buffer (read portion of macro buffer)
+  async getMacroBuffer(offset: number, size: number): Promise<Uint8Array> {
+    const command = new Uint8Array(32);
+    command[0] = 0x0E; // VIA_DYNAMIC_KEYMAP_MACRO_GET_BUFFER
+    command[1] = (offset >> 8) & 0xFF;
+    command[2] = offset & 0xFF;
+    command[3] = size;
+    const response = await this.sendCommand(command);
+    return response.slice(4, 4 + size);
+  }
+
+  // VIA Protocol: Set Macro Buffer (write portion of macro buffer)
+  async setMacroBuffer(offset: number, data: Uint8Array): Promise<void> {
+    const command = new Uint8Array(32);
+    command[0] = 0x0F; // VIA_DYNAMIC_KEYMAP_MACRO_SET_BUFFER
+    command[1] = (offset >> 8) & 0xFF;
+    command[2] = offset & 0xFF;
+    command[3] = data.length;
+    for (let i = 0; i < data.length && i < 28; i++) {
+      command[4 + i] = data[i];
+    }
+    await this.sendCommand(command);
+  }
+
+  // VIA Protocol: Reset Macro Buffer
+  async resetMacroBuffer(): Promise<void> {
+    const command = new Uint8Array(32);
+    command[0] = 0x10; // VIA_DYNAMIC_KEYMAP_MACRO_RESET
+    await this.sendCommand(command);
+  }
+
+  // Get all macros from device
+  async getAllMacros(): Promise<string[]> {
+    const bufferSize = await this.getMacroBufferSize();
+    const macros: string[] = [];
+
+    // Read entire macro buffer
+    const buffer: number[] = [];
+    for (let offset = 0; offset < bufferSize; offset += 28) {
+      const chunkSize = Math.min(28, bufferSize - offset);
+      const chunk = await this.getMacroBuffer(offset, chunkSize);
+      buffer.push(...Array.from(chunk));
+    }
+
+    // Parse macros from buffer
+    let currentMacro = '';
+    for (let i = 0; i < buffer.length; i++) {
+      const byte = buffer[i];
+
+      if (byte === 0x00) {
+        // End of macro
+        if (currentMacro.length > 0) {
+          macros.push(currentMacro);
+          currentMacro = '';
+        }
+      } else if (byte >= 0x01 && byte <= 0xFF) {
+        // Regular character (simplified - in reality we need to decode keycodes)
+        currentMacro += String.fromCharCode(byte);
+      }
+    }
+
+    return macros;
+  }
+
+  // Set a macro (simplified version)
+  async setMacro(macroId: number, text: string): Promise<void> {
+    // Convert text to byte array (simplified encoding)
+    const bytes: number[] = [];
+
+    for (let i = 0; i < text.length; i++) {
+      bytes.push(text.charCodeAt(i));
+    }
+    bytes.push(0x00); // End of macro marker
+
+    // Write to buffer at appropriate offset
+    const offset = macroId * 128; // Assume each macro gets 128 bytes max
+    const data = new Uint8Array(bytes);
+
+    // Write in chunks if necessary
+    for (let i = 0; i < data.length; i += 28) {
+      const chunkSize = Math.min(28, data.length - i);
+      const chunk = data.slice(i, i + chunkSize);
+      await this.setMacroBuffer(offset + i, chunk);
+    }
+  }
 }
 
 // Check if WebHID API is supported
