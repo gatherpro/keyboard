@@ -150,21 +150,20 @@ export const useStore = create<EditorState>((set, get) => ({
             console.error('Failed to auto-load keymap:', error);
           }
 
-          // Auto-load macros from device (disabled - too slow)
-          // TODO: Optimize macro loading
-          // try {
-          //   const macroTexts = await viaDevice.getAllMacros();
-          //   const macros = macroTexts.map((text, index) => ({
-          //     id: index,
-          //     name: `マクロ ${index + 1}`,
-          //     text,
-          //   }));
+          // Auto-load macros from device (optimized)
+          try {
+            const macroTexts = await viaDevice.getAllMacros();
+            const macros = macroTexts.map((text, index) => ({
+              id: index,
+              name: `マクロ ${index + 1}`,
+              text,
+            }));
 
-          //   set({ macros });
-          //   console.log('Macros auto-loaded from VIA device:', macros);
-          // } catch (error) {
-          //   console.error('Failed to auto-load macros:', error);
-          // }
+            set({ macros });
+            console.log('Macros auto-loaded from VIA device:', macros);
+          } catch (error) {
+            console.error('Failed to auto-load macros:', error);
+          }
         }
 
         return true;

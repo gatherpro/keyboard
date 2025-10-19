@@ -13,7 +13,6 @@ function App() {
     disconnectVIA,
     keyboardJson,
     macros,
-    loadMacrosFromVIA,
     saveMacro,
     deleteMacro
   } = useStore();
@@ -120,7 +119,6 @@ function App() {
             macros={macros}
             onSaveMacro={saveMacro}
             onDeleteMacro={deleteMacro}
-            onLoadMacros={loadMacrosFromVIA}
           />
         )}
 
