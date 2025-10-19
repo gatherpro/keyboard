@@ -235,8 +235,11 @@ export class VIADevice {
 
       // Read first byte to check if macro is empty
       const firstByte = await this.getMacroBuffer(offset, 1);
+      console.log(`Macro ${macroId}: first byte = 0x${firstByte[0].toString(16).padStart(2, '0')}`);
+
       if (firstByte[0] === 0x00) {
         // Empty macro, skip
+        console.log(`Macro ${macroId}: empty, skipping`);
         macros.push('');
         continue;
       }
@@ -248,6 +251,9 @@ export class VIADevice {
         const chunk = await this.getMacroBuffer(offset + i, chunkSize);
         buffer.push(...Array.from(chunk));
       }
+
+      console.log(`Macro ${macroId}: read ${buffer.length} bytes:`,
+        buffer.slice(0, 50).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
 
       // Parse this macro
       let currentMacro = '';
