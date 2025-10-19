@@ -69,7 +69,7 @@ export interface EditorState {
 
   // Macro Actions
   loadMacrosFromVIA: () => Promise<void>;
-  saveMacro: (id: number, name: string, text: string, type?: 'text' | 'shortcut', shortcut?: ShortcutMacro) => Promise<void>;
+  saveMacro: (id: number, name: string, text: string) => Promise<void>;
   deleteMacro: (id: number) => Promise<void>;
 }
 
@@ -92,18 +92,8 @@ export interface Keycode {
 
 // Macro Types
 
-export interface ShortcutMacro {
-  ctrl: boolean;
-  alt: boolean;
-  shift: boolean;
-  win: boolean;
-  key: string; // Key name (e.g., 'C', 'V', 'Tab', 'F1')
-}
-
 export interface Macro {
   id: number;
   name: string;
-  type?: 'text' | 'shortcut'; // Default: 'text' for backward compatibility
-  text: string; // Used for text macros, or generated from shortcut
-  shortcut?: ShortcutMacro; // Only for shortcut type
+  text: string;
 }

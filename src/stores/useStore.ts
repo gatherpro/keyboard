@@ -164,9 +164,7 @@ export const useStore = create<EditorState>((set, get) => ({
               return {
                 id: index,
                 name: data.name || `マクロ ${index + 1}`,
-                type: data.type || 'text',
                 text,
-                shortcut: data.shortcut,
               };
             });
 
@@ -262,9 +260,7 @@ export const useStore = create<EditorState>((set, get) => ({
         return {
           id: index,
           name: data.name || `マクロ ${index + 1}`,
-          type: data.type || 'text',
           text,
-          shortcut: data.shortcut,
         };
       });
 
@@ -276,14 +272,14 @@ export const useStore = create<EditorState>((set, get) => ({
     }
   },
 
-  saveMacro: async (id: number, name: string, text: string, type?: 'text' | 'shortcut', shortcut?: any) => {
+  saveMacro: async (id: number, name: string, text: string) => {
     const { macros, viaConnected } = get();
 
     // Update local state
     const existingIndex = macros.findIndex(m => m.id === id);
     let newMacros;
 
-    const newMacro = { id, name, text, type, shortcut };
+    const newMacro = { id, name, text };
 
     if (existingIndex >= 0) {
       // Update existing macro
@@ -296,26 +292,18 @@ export const useStore = create<EditorState>((set, get) => ({
 
     set({ macros: newMacros });
 
-    // Save macro name and metadata to localStorage
+    // Save macro name to localStorage
     const deviceName = viaDevice.getDeviceName();
     const savedDataJson = localStorage.getItem(`macroData_${deviceName}`);
     const savedData = savedDataJson ? JSON.parse(savedDataJson) : {};
-    savedData[id] = { name, type, shortcut };
+    savedData[id] = { name };
     localStorage.setItem(`macroData_${deviceName}`, JSON.stringify(savedData));
 
     // If VIA is connected, save to device
     if (viaConnected) {
       try {
-        // For shortcut macros, encode as bytes
-        if (type === 'shortcut' && shortcut) {
-          const bytes = viaDevice.encodeShortcutMacro(shortcut);
-          await viaDevice.setMacroRaw(id, bytes);
-          console.log('Shortcut macro saved to device:', { id, name, shortcut });
-        } else {
-          // For text macros, use existing encoding
-          await viaDevice.setMacro(id, text);
-          console.log('Text macro saved to device:', { id, name, text });
-        }
+        await viaDevice.setMacro(id, text);
+        console.log('Macro saved to device:', { id, name, text });
       } catch (error) {
         console.error('Failed to save macro to device:', error);
         alert(`マクロの保存に失敗しました: ${error}`);
