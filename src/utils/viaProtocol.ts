@@ -268,36 +268,41 @@ export class VIADevice {
           break;
         }
 
-        if (byte === 1) {
-          // SS_TAP_CODE
-          i++;
-          if (i < buffer.length) {
-            const keycode = buffer[i];
-            let char = this.keycodeToChar(keycode);
-            if (isShifted && char) {
-              char = char.toUpperCase();
+        // Check for escape byte
+        if (byte === 0x01) {
+          i++; // Skip escape byte
+          if (i >= buffer.length) break;
+
+          const command = buffer[i];
+          i++; // Move to argument
+
+          if (command === 0x01) {
+            // SS_TAP_CODE
+            if (i < buffer.length) {
+              const keycode = buffer[i];
+              let char = this.keycodeToChar(keycode);
+              if (isShifted && char) {
+                char = char.toUpperCase();
+              }
+              currentMacro += char;
             }
-            currentMacro += char;
-          }
-        } else if (byte === 2) {
-          // SS_DOWN_CODE
-          i++;
-          if (i < buffer.length && buffer[i] === 0xE1) {
-            // Shift down
-            isShifted = true;
-          }
-        } else if (byte === 3) {
-          // SS_UP_CODE
-          i++;
-          if (i < buffer.length && buffer[i] === 0xE1) {
-            // Shift up
-            isShifted = false;
+          } else if (command === 0x02) {
+            // SS_DOWN_CODE
+            if (i < buffer.length && buffer[i] === 0xE1) {
+              isShifted = true;
+            }
+          } else if (command === 0x03) {
+            // SS_UP_CODE
+            if (i < buffer.length && buffer[i] === 0xE1) {
+              isShifted = false;
+            }
           }
         }
 
         i++;
       }
 
+      console.log(`Macro ${macroId}: decoded text = "${currentMacro}"`);
       macros.push(currentMacro);
     }
 
