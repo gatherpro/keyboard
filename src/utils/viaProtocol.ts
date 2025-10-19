@@ -393,32 +393,27 @@ export class VIADevice {
   encodeShortcutMacro(shortcut: { ctrl: boolean; alt: boolean; shift: boolean; win: boolean; key: string }): number[] {
     const bytes: number[] = [];
 
-    // Modifier keycodes
-    const modifiers = [];
-    if (shortcut.ctrl) modifiers.push(0xE0);  // KC_LCTRL
-    if (shortcut.shift) modifiers.push(0xE1); // KC_LSHIFT
-    if (shortcut.alt) modifiers.push(0xE2);   // KC_LALT
-    if (shortcut.win) modifiers.push(0xE3);   // KC_LGUI
+    // Calculate modifier bitfield
+    let mods = 0;
+    if (shortcut.ctrl) mods |= 0x01;  // MOD_LCTL
+    if (shortcut.shift) mods |= 0x02; // MOD_LSFT
+    if (shortcut.alt) mods |= 0x04;   // MOD_LALT
+    if (shortcut.win) mods |= 0x08;   // MOD_LGUI
 
-    // Press modifiers
-    for (const modKeycode of modifiers) {
-      bytes.push(0x01); // Escape
-      bytes.push(0x02); // SS_DOWN_CODE
-      bytes.push(modKeycode);
-    }
-
-    // Tap main key
     const keycode = this.keyNameToKeycode(shortcut.key);
+
+    // Create QK_MODS keycode: 0x0000-0x00FF with mods in upper byte
+    // Format: (QK_MODS | (mods << 8) | keycode)
+    // QK_MODS = 0x0000 for basic keycodes, just use mods
+    const modded_keycode = (mods << 8) | keycode;
+
+    // Send as 16-bit keycode using SS_TAP_CODE
+    // For VIA macro protocol, we need to send this as a special sequence
+    // Use SS_TAP_CODE with the full 16-bit keycode
     bytes.push(0x01); // Escape
     bytes.push(0x01); // SS_TAP_CODE
-    bytes.push(keycode);
-
-    // Release modifiers (in reverse order)
-    for (let i = modifiers.length - 1; i >= 0; i--) {
-      bytes.push(0x01); // Escape
-      bytes.push(0x03); // SS_UP_CODE
-      bytes.push(modifiers[i]);
-    }
+    bytes.push(modded_keycode & 0xFF); // Lower byte (keycode)
+    bytes.push((modded_keycode >> 8) & 0xFF); // Upper byte (mods)
 
     return bytes;
   }
