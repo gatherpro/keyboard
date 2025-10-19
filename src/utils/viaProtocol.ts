@@ -221,6 +221,8 @@ export class VIADevice {
     const bufferSize = await this.getMacroBufferSize();
     const macros: string[] = [];
 
+    console.log('Macro buffer size:', bufferSize);
+
     // Read entire macro buffer
     const buffer: number[] = [];
     for (let offset = 0; offset < bufferSize; offset += 28) {
@@ -228,6 +230,10 @@ export class VIADevice {
       const chunk = await this.getMacroBuffer(offset, chunkSize);
       buffer.push(...Array.from(chunk));
     }
+
+    // Debug: Show first 256 bytes
+    console.log('First 256 bytes of macro buffer:',
+      buffer.slice(0, 256).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
 
     // Parse macros from VIA format buffer
     let currentMacro = '';
