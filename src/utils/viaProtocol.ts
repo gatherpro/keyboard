@@ -192,12 +192,33 @@ export class VIADevice {
     await this.sendCommand(command);
   }
 
-  // Helper: Convert QMK keycode to character
-  private keycodeToChar(keycode: number): string {
+  // Helper: Convert QMK keycode to character (with shift support)
+  private keycodeToChar(keycode: number, shifted: boolean = false): string {
     // Letters (KC_A = 0x04)
     if (keycode >= 0x04 && keycode <= 0x1D) {
-      return String.fromCharCode(97 + (keycode - 0x04)); // a-z
+      const char = String.fromCharCode(97 + (keycode - 0x04)); // a-z
+      return shifted ? char.toUpperCase() : char;
     }
+
+    // Numbers with shift (US keyboard layout)
+    if (shifted) {
+      const shiftedNumbers: { [key: number]: string } = {
+        0x1E: '!',  // Shift+1
+        0x1F: '@',  // Shift+2
+        0x20: '#',  // Shift+3
+        0x21: '$',  // Shift+4
+        0x22: '%',  // Shift+5
+        0x23: '^',  // Shift+6
+        0x24: '&',  // Shift+7
+        0x25: '*',  // Shift+8
+        0x26: '(',  // Shift+9
+        0x27: ')',  // Shift+0
+      };
+      if (keycode in shiftedNumbers) {
+        return shiftedNumbers[keycode];
+      }
+    }
+
     // Numbers 1-9 (KC_1 = 0x1E)
     if (keycode >= 0x1E && keycode <= 0x26) {
       return String.fromCharCode(49 + (keycode - 0x1E)); // 1-9
@@ -206,12 +227,41 @@ export class VIADevice {
     if (keycode === 0x27) {
       return '0';
     }
-    // Special characters
+
+    // Special characters with shift (US keyboard layout)
+    if (shifted) {
+      const shiftedSpecial: { [key: number]: string } = {
+        0x2D: '_',  // Shift+KC_MINS
+        0x2E: '+',  // Shift+KC_EQL
+        0x2F: '{',  // Shift+KC_LBRC
+        0x30: '}',  // Shift+KC_RBRC
+        0x31: '|',  // Shift+KC_BSLS
+        0x33: ':',  // Shift+KC_SCLN
+        0x34: '"',  // Shift+KC_QUOT
+        0x35: '~',  // Shift+KC_GRV
+        0x36: '<',  // Shift+KC_COMM
+        0x37: '>',  // Shift+KC_DOT
+        0x38: '?',  // Shift+KC_SLSH
+      };
+      if (keycode in shiftedSpecial) {
+        return shiftedSpecial[keycode];
+      }
+    }
+
+    // Special characters (unshifted)
     const specialKeys: { [key: number]: string } = {
       0x2C: ' ',  // KC_SPC
-      0x37: '.',  // KC_DOT
-      0x36: ',',  // KC_COMM
       0x2D: '-',  // KC_MINS
+      0x2E: '=',  // KC_EQL
+      0x2F: '[',  // KC_LBRC
+      0x30: ']',  // KC_RBRC
+      0x31: '\\', // KC_BSLS
+      0x33: ';',  // KC_SCLN
+      0x34: "'",  // KC_QUOT
+      0x35: '`',  // KC_GRV
+      0x36: ',',  // KC_COMM
+      0x37: '.',  // KC_DOT
+      0x38: '/',  // KC_SLSH
     };
     return specialKeys[keycode] || '';
   }
@@ -280,10 +330,7 @@ export class VIADevice {
             // SS_TAP_CODE
             if (i < buffer.length) {
               const keycode = buffer[i];
-              let char = this.keycodeToChar(keycode);
-              if (isShifted && char) {
-                char = char.toUpperCase();
-              }
+              const char = this.keycodeToChar(keycode, isShifted);
               currentMacro += char;
             }
           } else if (command === 0x02) {
@@ -329,14 +376,41 @@ export class VIADevice {
       return { keycode: 0x27, needsShift: false }; // KC_0 = 0x27
     }
 
-    // Special characters (simplified)
+    // Special characters (US keyboard layout)
     const specialChars: { [key: string]: { keycode: number; needsShift: boolean } } = {
       ' ': { keycode: 0x2C, needsShift: false }, // KC_SPC
-      '.': { keycode: 0x37, needsShift: false }, // KC_DOT
-      ',': { keycode: 0x36, needsShift: false }, // KC_COMM
-      '@': { keycode: 0x1F, needsShift: true },  // KC_2 with shift
+      '!': { keycode: 0x1E, needsShift: true },  // Shift+1
+      '@': { keycode: 0x1F, needsShift: true },  // Shift+2
+      '#': { keycode: 0x20, needsShift: true },  // Shift+3
+      '$': { keycode: 0x21, needsShift: true },  // Shift+4
+      '%': { keycode: 0x22, needsShift: true },  // Shift+5
+      '^': { keycode: 0x23, needsShift: true },  // Shift+6
+      '&': { keycode: 0x24, needsShift: true },  // Shift+7
+      '*': { keycode: 0x25, needsShift: true },  // Shift+8
+      '(': { keycode: 0x26, needsShift: true },  // Shift+9
+      ')': { keycode: 0x27, needsShift: true },  // Shift+0
       '-': { keycode: 0x2D, needsShift: false }, // KC_MINS
-      '_': { keycode: 0x2D, needsShift: true },  // KC_MINS with shift
+      '_': { keycode: 0x2D, needsShift: true },  // Shift+KC_MINS
+      '=': { keycode: 0x2E, needsShift: false }, // KC_EQL
+      '+': { keycode: 0x2E, needsShift: true },  // Shift+KC_EQL
+      '[': { keycode: 0x2F, needsShift: false }, // KC_LBRC
+      '{': { keycode: 0x2F, needsShift: true },  // Shift+KC_LBRC
+      ']': { keycode: 0x30, needsShift: false }, // KC_RBRC
+      '}': { keycode: 0x30, needsShift: true },  // Shift+KC_RBRC
+      '\\': { keycode: 0x31, needsShift: false }, // KC_BSLS
+      '|': { keycode: 0x31, needsShift: true },  // Shift+KC_BSLS
+      ';': { keycode: 0x33, needsShift: false }, // KC_SCLN
+      ':': { keycode: 0x33, needsShift: true },  // Shift+KC_SCLN
+      "'": { keycode: 0x34, needsShift: false }, // KC_QUOT
+      '"': { keycode: 0x34, needsShift: true },  // Shift+KC_QUOT
+      '`': { keycode: 0x35, needsShift: false }, // KC_GRV
+      '~': { keycode: 0x35, needsShift: true },  // Shift+KC_GRV
+      ',': { keycode: 0x36, needsShift: false }, // KC_COMM
+      '<': { keycode: 0x36, needsShift: true },  // Shift+KC_COMM
+      '.': { keycode: 0x37, needsShift: false }, // KC_DOT
+      '>': { keycode: 0x37, needsShift: true },  // Shift+KC_DOT
+      '/': { keycode: 0x38, needsShift: false }, // KC_SLSH
+      '?': { keycode: 0x38, needsShift: true },  // Shift+KC_SLSH
     };
 
     if (char in specialChars) {
