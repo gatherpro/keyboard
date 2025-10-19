@@ -339,6 +339,11 @@ export class VIADevice {
   // Set a macro (VIA format)
   async setMacro(macroId: number, text: string): Promise<void> {
     console.log(`Setting macro ${macroId} with text: "${text}"`);
+
+    // Get buffer size to verify firmware settings
+    const bufferSize = await this.getMacroBufferSize();
+    console.log(`Macro buffer size from device: ${bufferSize} bytes`);
+
     const bytes: number[] = [];
 
     // VIA macro format:
@@ -371,8 +376,14 @@ export class VIADevice {
 
     bytes.push(0x00); // End of macro marker
 
+    console.log(`Encoded macro bytes (${bytes.length} bytes):`,
+      bytes.map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+
     // Write to buffer at appropriate offset
-    const offset = macroId * 128; // Assume each macro gets 128 bytes max
+    const macroSize = Math.floor(bufferSize / 16); // Size per macro slot
+    const offset = macroId * macroSize;
+    console.log(`Writing to offset ${offset}, macro size: ${macroSize}`);
+
     const data = new Uint8Array(bytes);
 
     // Write in chunks if necessary
@@ -380,7 +391,19 @@ export class VIADevice {
       const chunkSize = Math.min(28, data.length - i);
       const chunk = data.slice(i, i + chunkSize);
       await this.setMacroBuffer(offset + i, chunk);
+      console.log(`Wrote chunk at offset ${offset + i}, size: ${chunkSize}`);
     }
+
+    // Verify: Read back the macro
+    console.log('Verifying macro write...');
+    const readBack: number[] = [];
+    for (let i = 0; i < Math.min(bytes.length + 10, macroSize); i += 28) {
+      const chunkSize = Math.min(28, macroSize - i);
+      const chunk = await this.getMacroBuffer(offset + i, chunkSize);
+      readBack.push(...Array.from(chunk));
+    }
+    console.log(`Read back (first ${Math.min(bytes.length + 10, 100)} bytes):`,
+      readBack.slice(0, Math.min(bytes.length + 10, 100)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
   }
 }
 
