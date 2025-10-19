@@ -335,6 +335,7 @@ export class VIADevice {
 
   // Set a macro (VIA format)
   async setMacro(macroId: number, text: string): Promise<void> {
+    console.log(`Setting macro ${macroId} with text: "${text}"`);
     const bytes: number[] = [];
 
     // VIA macro format:
@@ -344,7 +345,9 @@ export class VIADevice {
     // 4 = SS_DELAY_CODE (delay)
 
     for (let i = 0; i < text.length; i++) {
-      const { keycode, needsShift } = this.charToKeycode(text[i]);
+      const char = text[i];
+      const { keycode, needsShift } = this.charToKeycode(char);
+      console.log(`Char '${char}' (${char.charCodeAt(0)}) -> keycode 0x${keycode.toString(16)}, shift: ${needsShift}`);
 
       if (needsShift) {
         bytes.push(2); // SS_DOWN_CODE
