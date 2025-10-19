@@ -350,15 +350,18 @@ export class VIADevice {
       console.log(`Char '${char}' (${char.charCodeAt(0)}) -> keycode 0x${keycode.toString(16)}, shift: ${needsShift}`);
 
       if (needsShift) {
-        bytes.push(2); // SS_DOWN_CODE
+        bytes.push(0x01); // Escape
+        bytes.push(0x02); // SS_DOWN_CODE
         bytes.push(0xE1); // KC_LSFT
       }
 
-      bytes.push(1); // SS_TAP_CODE
+      bytes.push(0x01); // Escape
+      bytes.push(0x01); // SS_TAP_CODE
       bytes.push(keycode);
 
       if (needsShift) {
-        bytes.push(3); // SS_UP_CODE
+        bytes.push(0x01); // Escape
+        bytes.push(0x03); // SS_UP_CODE
         bytes.push(0xE1); // KC_LSFT
       }
     }
