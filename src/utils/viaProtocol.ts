@@ -192,6 +192,30 @@ export class VIADevice {
     await this.sendCommand(command);
   }
 
+  // Helper: Convert QMK keycode to character
+  private keycodeToChar(keycode: number): string {
+    // Letters (KC_A = 0x04)
+    if (keycode >= 0x04 && keycode <= 0x1D) {
+      return String.fromCharCode(97 + (keycode - 0x04)); // a-z
+    }
+    // Numbers 1-9 (KC_1 = 0x1E)
+    if (keycode >= 0x1E && keycode <= 0x26) {
+      return String.fromCharCode(49 + (keycode - 0x1E)); // 1-9
+    }
+    // Number 0 (KC_0 = 0x27)
+    if (keycode === 0x27) {
+      return '0';
+    }
+    // Special characters
+    const specialKeys: { [key: number]: string } = {
+      0x2C: ' ',  // KC_SPC
+      0x37: '.',  // KC_DOT
+      0x36: ',',  // KC_COMM
+      0x2D: '-',  // KC_MINS
+    };
+    return specialKeys[keycode] || '';
+  }
+
   // Get all macros from device
   async getAllMacros(): Promise<string[]> {
     const bufferSize = await this.getMacroBufferSize();
@@ -205,9 +229,12 @@ export class VIADevice {
       buffer.push(...Array.from(chunk));
     }
 
-    // Parse macros from buffer
+    // Parse macros from VIA format buffer
     let currentMacro = '';
-    for (let i = 0; i < buffer.length; i++) {
+    let i = 0;
+    let isShifted = false;
+
+    while (i < buffer.length) {
       const byte = buffer[i];
 
       if (byte === 0x00) {
@@ -216,10 +243,47 @@ export class VIADevice {
           macros.push(currentMacro);
           currentMacro = '';
         }
-      } else if (byte >= 0x01 && byte <= 0xFF) {
-        // Regular character (simplified - in reality we need to decode keycodes)
-        currentMacro += String.fromCharCode(byte);
+        i++;
+        // Skip to next macro (align to 128 bytes)
+        const macroIndex = macros.length;
+        i = macroIndex * 128;
+        isShifted = false;
+        continue;
       }
+
+      if (byte === 1) {
+        // SS_TAP_CODE
+        i++;
+        if (i < buffer.length) {
+          const keycode = buffer[i];
+          let char = this.keycodeToChar(keycode);
+          if (isShifted && char) {
+            char = char.toUpperCase();
+          }
+          currentMacro += char;
+        }
+      } else if (byte === 2) {
+        // SS_DOWN_CODE
+        i++;
+        if (i < buffer.length && buffer[i] === 0xE1) {
+          // Shift down
+          isShifted = true;
+        }
+      } else if (byte === 3) {
+        // SS_UP_CODE
+        i++;
+        if (i < buffer.length && buffer[i] === 0xE1) {
+          // Shift up
+          isShifted = false;
+        }
+      }
+
+      i++;
+    }
+
+    // Add last macro if exists
+    if (currentMacro.length > 0) {
+      macros.push(currentMacro);
     }
 
     return macros;
