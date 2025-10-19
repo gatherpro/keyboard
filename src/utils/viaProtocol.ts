@@ -347,6 +347,82 @@ export class VIADevice {
     return { keycode: 0x2C, needsShift: false };
   }
 
+  // Helper: Convert key name to QMK keycode
+  private keyNameToKeycode(keyName: string): number {
+    // Letters A-Z
+    if (keyName.length === 1 && keyName >= 'A' && keyName <= 'Z') {
+      return 0x04 + (keyName.charCodeAt(0) - 65); // KC_A = 0x04
+    }
+
+    // Numbers 0-9
+    if (keyName.length === 1 && keyName >= '0' && keyName <= '9') {
+      if (keyName === '0') return 0x27; // KC_0
+      return 0x1E + (keyName.charCodeAt(0) - 49); // KC_1 = 0x1E
+    }
+
+    // Function keys
+    if (keyName.startsWith('F') && keyName.length >= 2) {
+      const num = parseInt(keyName.slice(1));
+      if (num >= 1 && num <= 12) {
+        return 0x3A + (num - 1); // KC_F1 = 0x3A
+      }
+    }
+
+    // Special keys mapping
+    const specialKeys: { [key: string]: number } = {
+      'Tab': 0x2B,       // KC_TAB
+      'Enter': 0x28,     // KC_ENT
+      'Esc': 0x29,       // KC_ESC
+      'Space': 0x2C,     // KC_SPC
+      'Backspace': 0x2A, // KC_BSPC
+      'Delete': 0x4C,    // KC_DEL
+      'Home': 0x4A,      // KC_HOME
+      'End': 0x4D,       // KC_END
+      'PageUp': 0x4B,    // KC_PGUP
+      'PageDown': 0x4E,  // KC_PGDN
+      'Left': 0x50,      // KC_LEFT
+      'Right': 0x4F,     // KC_RGHT
+      'Up': 0x52,        // KC_UP
+      'Down': 0x51,      // KC_DOWN
+    };
+
+    return specialKeys[keyName] || 0x2C; // Default to space
+  }
+
+  // Helper: Encode shortcut key to VIA macro bytes
+  encodeShortcutMacro(shortcut: { ctrl: boolean; alt: boolean; shift: boolean; win: boolean; key: string }): number[] {
+    const bytes: number[] = [];
+
+    // Modifier keycodes
+    const modifiers = [];
+    if (shortcut.ctrl) modifiers.push(0xE0);  // KC_LCTRL
+    if (shortcut.shift) modifiers.push(0xE1); // KC_LSHIFT
+    if (shortcut.alt) modifiers.push(0xE2);   // KC_LALT
+    if (shortcut.win) modifiers.push(0xE3);   // KC_LGUI
+
+    // Press modifiers
+    for (const modKeycode of modifiers) {
+      bytes.push(0x01); // Escape
+      bytes.push(0x02); // SS_DOWN_CODE
+      bytes.push(modKeycode);
+    }
+
+    // Tap main key
+    const keycode = this.keyNameToKeycode(shortcut.key);
+    bytes.push(0x01); // Escape
+    bytes.push(0x01); // SS_TAP_CODE
+    bytes.push(keycode);
+
+    // Release modifiers (in reverse order)
+    for (let i = modifiers.length - 1; i >= 0; i--) {
+      bytes.push(0x01); // Escape
+      bytes.push(0x03); // SS_UP_CODE
+      bytes.push(modifiers[i]);
+    }
+
+    return bytes;
+  }
+
   // Set a macro (VIA format)
   async setMacro(macroId: number, text: string): Promise<void> {
     console.log(`Setting macro ${macroId} with text: "${text}"`);
@@ -415,6 +491,47 @@ export class VIADevice {
     }
     console.log(`Read back (first ${Math.min(bytes.length + 10, 100)} bytes):`,
       readBack.slice(0, Math.min(bytes.length + 10, 100)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+  }
+
+  // Set a macro from raw bytes (for shortcuts)
+  async setMacroRaw(macroId: number, bytes: number[]): Promise<void> {
+    console.log(`Setting macro ${macroId} with ${bytes.length} raw bytes`);
+
+    // Get buffer size to verify firmware settings
+    const bufferSize = await this.getMacroBufferSize();
+    console.log(`Macro buffer size from device: ${bufferSize} bytes`);
+
+    // Add end marker
+    const fullBytes = [...bytes, 0x00];
+
+    console.log(`Encoded macro bytes (${fullBytes.length} bytes):`,
+      fullBytes.map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+
+    // Write to buffer at appropriate offset
+    const macroSize = Math.floor(bufferSize / 16); // Size per macro slot
+    const offset = macroId * macroSize;
+    console.log(`Writing to offset ${offset}, macro size: ${macroSize}`);
+
+    const data = new Uint8Array(fullBytes);
+
+    // Write in chunks if necessary
+    for (let i = 0; i < data.length; i += 28) {
+      const chunkSize = Math.min(28, data.length - i);
+      const chunk = data.slice(i, i + chunkSize);
+      await this.setMacroBuffer(offset + i, chunk);
+      console.log(`Wrote chunk at offset ${offset + i}, size: ${chunkSize}`);
+    }
+
+    // Verify: Read back the macro
+    console.log('Verifying macro write...');
+    const readBack: number[] = [];
+    for (let i = 0; i < Math.min(fullBytes.length + 10, macroSize); i += 28) {
+      const chunkSize = Math.min(28, macroSize - i);
+      const chunk = await this.getMacroBuffer(offset + i, chunkSize);
+      readBack.push(...Array.from(chunk));
+    }
+    console.log(`Read back (first ${Math.min(fullBytes.length + 10, 100)} bytes):`,
+      readBack.slice(0, Math.min(fullBytes.length + 10, 100)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
   }
 }
 
