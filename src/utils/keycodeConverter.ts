@@ -46,6 +46,12 @@ const KEYCODE_MAP: Record<string, number> = {
   'MO(0)': 0x5100, 'MO(1)': 0x5101, 'MO(2)': 0x5102, 'MO(3)': 0x5103,
   'TG(0)': 0x5200, 'TG(1)': 0x5201, 'TG(2)': 0x5202, 'TG(3)': 0x5203,
   'TO(0)': 0x5000, 'TO(1)': 0x5001, 'TO(2)': 0x5002, 'TO(3)': 0x5003,
+
+  // Macro keys
+  'QK_MACRO_0': 0x7700, 'QK_MACRO_1': 0x7701, 'QK_MACRO_2': 0x7702, 'QK_MACRO_3': 0x7703,
+  'QK_MACRO_4': 0x7704, 'QK_MACRO_5': 0x7705, 'QK_MACRO_6': 0x7706, 'QK_MACRO_7': 0x7707,
+  'QK_MACRO_8': 0x7708, 'QK_MACRO_9': 0x7709, 'QK_MACRO_10': 0x770A, 'QK_MACRO_11': 0x770B,
+  'QK_MACRO_12': 0x770C, 'QK_MACRO_13': 0x770D, 'QK_MACRO_14': 0x770E, 'QK_MACRO_15': 0x770F,
 };
 
 // Create reverse mapping (VIA number -> QMK string)
