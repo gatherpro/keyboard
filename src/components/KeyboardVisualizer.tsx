@@ -17,11 +17,7 @@ export function KeyboardVisualizer() {
   const [showKeycodeSelector, setShowKeycodeSelector] = useState(false);
 
   if (!keyboardJson || !parsedKeymap) {
-    return (
-      <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-500">
-        Please load keyboard.json and keymap.c files first
-      </div>
-    );
+    return null;
   }
 
   const layout = getPrimaryLayout(keyboardJson);

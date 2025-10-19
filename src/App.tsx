@@ -50,39 +50,40 @@ function App() {
           <h1 className="text-4xl font-bold text-orange-900 mb-2">
             ErgoGain Keymap Editor
           </h1>
-          <p className="text-orange-700">
-            Visual editor for ErgoGain keyboard keymaps
+          <p className="text-orange-700 mb-4">
+            ErgoGain専用キーマップエディター
           </p>
+          <div className="max-w-2xl mx-auto bg-white border-2 border-orange-200 rounded-lg p-4">
+            <p className="text-sm text-orange-900">
+              <strong>使い方：</strong><br/>
+              ① 下のボタンでErgoGainキーボードを接続<br/>
+              ② キーをクリックして機能を変更<br/>
+              ③ 右側のテストパッドで動作確認<br/>
+              ④ 変更は自動的にキーボードに反映されます（ファームウェア書き換え不要）
+            </p>
+          </div>
         </header>
 
-        {/* VIA Connection */}
+        {/* Device Connection */}
         <div className="bg-white rounded-lg shadow-lg border-2 border-orange-200 p-6">
-            <h2 className="text-xl font-semibold text-orange-800 mb-4">
-              VIA Live Connection
-            </h2>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 justify-center">
               <button
                 onClick={handleVIAConnect}
-                className={`px-6 py-3 font-semibold rounded-lg shadow-md transition-colors ${
+                className={`px-8 py-4 font-bold text-lg rounded-lg shadow-md transition-colors ${
                   viaConnected
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-orange-600 text-white hover:bg-orange-700'
                 }`}
               >
-                {viaConnected ? 'Disconnect VIA Device' : 'Connect VIA Device'}
+                {viaConnected ? 'Disconnect Device' : 'Connect Your Device'}
               </button>
               {viaConnected && (
                 <span className="flex items-center gap-2 text-orange-600 font-medium">
                   <span className="w-3 h-3 bg-orange-600 rounded-full animate-pulse"></span>
-                  Connected - Changes apply in real-time
+                  接続中
                 </span>
               )}
             </div>
-            <p className="text-sm text-orange-700 mt-4">
-              {viaConnected
-                ? 'Your keyboard is connected. Any keymap changes will be applied instantly.'
-                : 'Connect your VIA-enabled keyboard to edit keymaps in real-time without re-flashing.'}
-            </p>
         </div>
 
         {/* File Uploader - Optional for unsupported keyboards */}
