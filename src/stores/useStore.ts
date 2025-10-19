@@ -234,13 +234,13 @@ export const useStore = create<EditorState>((set, get) => ({
   },
 
   // Macro Actions
-  loadMacrosFromVIA: async () => {
+  loadMacrosFromVIA: async (onProgress?: (current: number, total: number) => void) => {
     if (!viaDevice.isConnected()) {
       throw new Error('VIA device not connected');
     }
 
     try {
-      const macroTexts = await viaDevice.getAllMacros();
+      const macroTexts = await viaDevice.getAllMacros(onProgress);
       const macros = macroTexts.map((text, index) => ({
         id: index,
         name: `マクロ ${index + 1}`,

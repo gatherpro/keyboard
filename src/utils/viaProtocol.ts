@@ -216,79 +216,82 @@ export class VIADevice {
     return specialKeys[keycode] || '';
   }
 
-  // Get all macros from device
-  async getAllMacros(): Promise<string[]> {
+  // Get all macros from device (optimized)
+  async getAllMacros(onProgress?: (current: number, total: number) => void): Promise<string[]> {
     const bufferSize = await this.getMacroBufferSize();
     const macros: string[] = [];
+    const macroCount = 16; // DYNAMIC_KEYMAP_MACRO_COUNT
+    const macroSize = Math.floor(bufferSize / macroCount); // Size per macro slot
 
-    console.log('Macro buffer size:', bufferSize);
+    console.log('Macro buffer size:', bufferSize, 'per macro:', macroSize);
 
-    // Read entire macro buffer
-    const buffer: number[] = [];
-    for (let offset = 0; offset < bufferSize; offset += 28) {
-      const chunkSize = Math.min(28, bufferSize - offset);
-      const chunk = await this.getMacroBuffer(offset, chunkSize);
-      buffer.push(...Array.from(chunk));
-    }
+    // Read each macro slot individually and skip empty ones
+    for (let macroId = 0; macroId < macroCount; macroId++) {
+      if (onProgress) {
+        onProgress(macroId + 1, macroCount);
+      }
 
-    // Debug: Show first 256 bytes
-    console.log('First 256 bytes of macro buffer:',
-      buffer.slice(0, 256).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+      const offset = macroId * macroSize;
 
-    // Parse macros from VIA format buffer
-    let currentMacro = '';
-    let i = 0;
-    let isShifted = false;
-
-    while (i < buffer.length) {
-      const byte = buffer[i];
-
-      if (byte === 0x00) {
-        // End of macro
-        if (currentMacro.length > 0) {
-          macros.push(currentMacro);
-          currentMacro = '';
-        }
-        i++;
-        // Skip to next macro (align to 128 bytes)
-        const macroIndex = macros.length;
-        i = macroIndex * 128;
-        isShifted = false;
+      // Read first byte to check if macro is empty
+      const firstByte = await this.getMacroBuffer(offset, 1);
+      if (firstByte[0] === 0x00) {
+        // Empty macro, skip
+        macros.push('');
         continue;
       }
 
-      if (byte === 1) {
-        // SS_TAP_CODE
-        i++;
-        if (i < buffer.length) {
-          const keycode = buffer[i];
-          let char = this.keycodeToChar(keycode);
-          if (isShifted && char) {
-            char = char.toUpperCase();
-          }
-          currentMacro += char;
-        }
-      } else if (byte === 2) {
-        // SS_DOWN_CODE
-        i++;
-        if (i < buffer.length && buffer[i] === 0xE1) {
-          // Shift down
-          isShifted = true;
-        }
-      } else if (byte === 3) {
-        // SS_UP_CODE
-        i++;
-        if (i < buffer.length && buffer[i] === 0xE1) {
-          // Shift up
-          isShifted = false;
-        }
+      // Read full macro data
+      const buffer: number[] = [];
+      for (let i = 0; i < macroSize; i += 28) {
+        const chunkSize = Math.min(28, macroSize - i);
+        const chunk = await this.getMacroBuffer(offset + i, chunkSize);
+        buffer.push(...Array.from(chunk));
       }
 
-      i++;
-    }
+      // Parse this macro
+      let currentMacro = '';
+      let i = 0;
+      let isShifted = false;
 
-    // Add last macro if exists
-    if (currentMacro.length > 0) {
+      while (i < buffer.length) {
+        const byte = buffer[i];
+
+        if (byte === 0x00) {
+          // End of macro
+          break;
+        }
+
+        if (byte === 1) {
+          // SS_TAP_CODE
+          i++;
+          if (i < buffer.length) {
+            const keycode = buffer[i];
+            let char = this.keycodeToChar(keycode);
+            if (isShifted && char) {
+              char = char.toUpperCase();
+            }
+            currentMacro += char;
+          }
+        } else if (byte === 2) {
+          // SS_DOWN_CODE
+          i++;
+          if (i < buffer.length && buffer[i] === 0xE1) {
+            // Shift down
+            isShifted = true;
+          }
+        } else if (byte === 3) {
+          // SS_UP_CODE
+          i++;
+          if (i < buffer.length && buffer[i] === 0xE1) {
+            // Shift up
+            isShifted = false;
+          }
+        }
+
+        i++;
+      }
+
       macros.push(currentMacro);
     }
 
