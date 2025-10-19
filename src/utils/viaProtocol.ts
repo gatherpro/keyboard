@@ -225,14 +225,71 @@ export class VIADevice {
     return macros;
   }
 
-  // Set a macro (simplified version)
+  // Helper: Convert character to QMK keycode with modifiers
+  private charToKeycode(char: string): { keycode: number; needsShift: boolean } {
+    const c = char.charCodeAt(0);
+
+    // Lowercase letters
+    if (c >= 97 && c <= 122) { // a-z
+      return { keycode: 0x04 + (c - 97), needsShift: false }; // KC_A = 0x04
+    }
+    // Uppercase letters
+    if (c >= 65 && c <= 90) { // A-Z
+      return { keycode: 0x04 + (c - 65), needsShift: true };
+    }
+    // Numbers
+    if (c >= 49 && c <= 57) { // 1-9
+      return { keycode: 0x1E + (c - 49), needsShift: false }; // KC_1 = 0x1E
+    }
+    if (c === 48) { // 0
+      return { keycode: 0x27, needsShift: false }; // KC_0 = 0x27
+    }
+
+    // Special characters (simplified)
+    const specialChars: { [key: string]: { keycode: number; needsShift: boolean } } = {
+      ' ': { keycode: 0x2C, needsShift: false }, // KC_SPC
+      '.': { keycode: 0x37, needsShift: false }, // KC_DOT
+      ',': { keycode: 0x36, needsShift: false }, // KC_COMM
+      '@': { keycode: 0x1F, needsShift: true },  // KC_2 with shift
+      '-': { keycode: 0x2D, needsShift: false }, // KC_MINS
+      '_': { keycode: 0x2D, needsShift: true },  // KC_MINS with shift
+    };
+
+    if (char in specialChars) {
+      return specialChars[char];
+    }
+
+    // Default: space
+    return { keycode: 0x2C, needsShift: false };
+  }
+
+  // Set a macro (VIA format)
   async setMacro(macroId: number, text: string): Promise<void> {
-    // Convert text to byte array (simplified encoding)
     const bytes: number[] = [];
 
+    // VIA macro format:
+    // 1 = SS_TAP_CODE (tap a key)
+    // 2 = SS_DOWN_CODE (press down)
+    // 3 = SS_UP_CODE (release)
+    // 4 = SS_DELAY_CODE (delay)
+
     for (let i = 0; i < text.length; i++) {
-      bytes.push(text.charCodeAt(i));
+      const { keycode, needsShift } = this.charToKeycode(text[i]);
+
+      if (needsShift) {
+        bytes.push(2); // SS_DOWN_CODE
+        bytes.push(0xE1); // KC_LSFT
+      }
+
+      bytes.push(1); // SS_TAP_CODE
+      bytes.push(keycode);
+
+      if (needsShift) {
+        bytes.push(3); // SS_UP_CODE
+        bytes.push(0xE1); // KC_LSFT
+      }
     }
+
     bytes.push(0x00); // End of macro marker
 
     // Write to buffer at appropriate offset
