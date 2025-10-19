@@ -390,26 +390,30 @@ export class VIADevice {
   }
 
   // Helper: Encode shortcut key to VIA macro bytes (SS_LCTL format)
+  // Note: X_keycodes are encoded as HEX STRING not bytes! e.g. "e0" not 0xE0
   encodeShortcutMacro(shortcut: { ctrl: boolean; alt: boolean; shift: boolean; win: boolean; key: string }): number[] {
     const bytes: number[] = [];
 
-    // X_modifier keycodes (from send_string_keycodes.h)
-    const modifiers = [];
-    if (shortcut.ctrl) modifiers.push(0xE0);  // X_LEFT_CTRL
-    if (shortcut.shift) modifiers.push(0xE1); // X_LEFT_SHIFT
-    if (shortcut.alt) modifiers.push(0xE2);   // X_LEFT_ALT
-    if (shortcut.win) modifiers.push(0xE3);   // X_LEFT_GUI
+    // X_modifier keycodes as HEX STRINGS (from send_string_keycodes.h)
+    const modifierStrings = [];
+    if (shortcut.ctrl) modifierStrings.push('e0');  // X_LEFT_CTRL
+    if (shortcut.shift) modifierStrings.push('e1'); // X_LEFT_SHIFT
+    if (shortcut.alt) modifierStrings.push('e2');   // X_LEFT_ALT
+    if (shortcut.win) modifierStrings.push('e3');   // X_LEFT_GUI
 
     // Press modifiers: SS_DOWN(X_modifier)
-    for (const modKeycode of modifiers) {
+    for (const modString of modifierStrings) {
       bytes.push(0x01); // SS_QMK_PREFIX
       bytes.push(0x02); // SS_DOWN_CODE
-      bytes.push(modKeycode);
+      // Add hex string as ASCII characters
+      for (let i = 0; i < modString.length; i++) {
+        bytes.push(modString.charCodeAt(i));
+      }
     }
 
     // Send the key
     // For letters/numbers: send as ASCII character directly
-    // For special keys: use SS_TAP(X_keycode)
+    // For special keys: use SS_TAP(X_keycode) with hex string
     const keyName = shortcut.key;
 
     // Letters A-Z -> lowercase ASCII
@@ -420,19 +424,27 @@ export class VIADevice {
     else if (keyName.length === 1 && keyName >= '0' && keyName <= '9') {
       bytes.push(keyName.charCodeAt(0)); // Direct ASCII character
     }
-    // Special keys -> SS_TAP(X_keycode)
+    // Special keys -> SS_TAP(X_keycode) with hex string
     else {
-      const xKeycode = this.keyNameToKeycode(keyName); // Get X_keycode
+      const xKeycode = this.keyNameToKeycode(keyName); // Get X_keycode value
+      const hexString = xKeycode.toString(16).padStart(2, '0'); // Convert to hex string
       bytes.push(0x01); // SS_QMK_PREFIX
       bytes.push(0x01); // SS_TAP_CODE
-      bytes.push(xKeycode); // X_keycode
+      // Add hex string as ASCII characters
+      for (let i = 0; i < hexString.length; i++) {
+        bytes.push(hexString.charCodeAt(i));
+      }
     }
 
     // Release modifiers: SS_UP(X_modifier) in reverse order
-    for (let i = modifiers.length - 1; i >= 0; i--) {
+    for (let i = modifierStrings.length - 1; i >= 0; i--) {
       bytes.push(0x01); // SS_QMK_PREFIX
       bytes.push(0x03); // SS_UP_CODE
-      bytes.push(modifiers[i]);
+      // Add hex string as ASCII characters
+      const modString = modifierStrings[i];
+      for (let j = 0; j < modString.length; j++) {
+        bytes.push(modString.charCodeAt(j));
+      }
     }
 
     return bytes;
