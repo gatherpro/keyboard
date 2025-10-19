@@ -120,7 +120,6 @@ function App() {
             macros={macros}
             onSaveMacro={saveMacro}
             onDeleteMacro={deleteMacro}
-            onLoadMacros={loadMacrosFromVIA}
           />
         )}
 

@@ -10,10 +10,9 @@ interface MacroEditorProps {
   macros: Macro[];
   onSaveMacro: (id: number, name: string, text: string) => void;
   onDeleteMacro: (id: number) => void;
-  onLoadMacros: () => void;
 }
 
-export function MacroEditor({ macros, onSaveMacro, onDeleteMacro, onLoadMacros }: MacroEditorProps) {
+export function MacroEditor({ macros, onSaveMacro, onDeleteMacro }: MacroEditorProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editText, setEditText] = useState('');
@@ -62,20 +61,12 @@ export function MacroEditor({ macros, onSaveMacro, onDeleteMacro, onLoadMacros }
     <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-orange-200">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-orange-900">マクロ管理</h3>
-        <div className="flex gap-2">
-          <button
-            onClick={onLoadMacros}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors"
-          >
-            デバイスから読込
-          </button>
-          <button
-            onClick={handleAddNew}
-            className="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-orange-700 transition-colors"
-          >
-            ＋ 新規追加
-          </button>
-        </div>
+        <button
+          onClick={handleAddNew}
+          className="px-4 py-2 bg-orange-600 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-orange-700 transition-colors"
+        >
+          ＋ 新規追加
+        </button>
       </div>
 
       <p className="text-sm text-orange-700 mb-4">
