@@ -89,6 +89,24 @@ export const QMK_KEYCODES: Keycode[] = [
   { code: 'KC_MSTP', display: 'Stop', category: 'media' },
   { code: 'KC_MPRV', display: 'Prev', category: 'media' },
   { code: 'KC_MNXT', display: 'Next', category: 'media' },
+
+  // Macro Keys
+  { code: 'QK_MACRO_0', display: 'M0', category: 'special', description: 'マクロ 0' },
+  { code: 'QK_MACRO_1', display: 'M1', category: 'special', description: 'マクロ 1' },
+  { code: 'QK_MACRO_2', display: 'M2', category: 'special', description: 'マクロ 2' },
+  { code: 'QK_MACRO_3', display: 'M3', category: 'special', description: 'マクロ 3' },
+  { code: 'QK_MACRO_4', display: 'M4', category: 'special', description: 'マクロ 4' },
+  { code: 'QK_MACRO_5', display: 'M5', category: 'special', description: 'マクロ 5' },
+  { code: 'QK_MACRO_6', display: 'M6', category: 'special', description: 'マクロ 6' },
+  { code: 'QK_MACRO_7', display: 'M7', category: 'special', description: 'マクロ 7' },
+  { code: 'QK_MACRO_8', display: 'M8', category: 'special', description: 'マクロ 8' },
+  { code: 'QK_MACRO_9', display: 'M9', category: 'special', description: 'マクロ 9' },
+  { code: 'QK_MACRO_10', display: 'M10', category: 'special', description: 'マクロ 10' },
+  { code: 'QK_MACRO_11', display: 'M11', category: 'special', description: 'マクロ 11' },
+  { code: 'QK_MACRO_12', display: 'M12', category: 'special', description: 'マクロ 12' },
+  { code: 'QK_MACRO_13', display: 'M13', category: 'special', description: 'マクロ 13' },
+  { code: 'QK_MACRO_14', display: 'M14', category: 'special', description: 'マクロ 14' },
+  { code: 'QK_MACRO_15', display: 'M15', category: 'special', description: 'マクロ 15' },
 ];
 
 // Layer switching functions (will be parsed specially)
