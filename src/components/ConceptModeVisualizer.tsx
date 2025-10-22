@@ -13,7 +13,6 @@ export function ConceptModeVisualizer() {
     updateConceptKey,
     deleteConceptKey,
     setConceptKeyLabel,
-    currentLayerIndex,
   } = useStore();
 
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
