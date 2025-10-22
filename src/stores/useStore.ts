@@ -10,13 +10,20 @@ const viaDevice = new VIADevice();
 
 export const useStore = create<EditorState>((set, get) => ({
   // State
+  editorMode: 'device', // デフォルトは実機モード
   keyboardJson: null,
   keymapC: null,
   parsedKeymap: null,
+  conceptKeys: [], // 構想モード用のキー配列
   currentLayerIndex: 0,
   selectedKeyIndex: null,
   viaConnected: false,
   macros: [],
+
+  // Mode Actions
+  setEditorMode: (mode) => {
+    set({ editorMode: mode, selectedKeyIndex: null });
+  },
 
   // Actions
   loadKeyboardJson: (json: KeyboardJson) => {
@@ -336,6 +343,38 @@ export const useStore = create<EditorState>((set, get) => ({
         alert(`マクロの削除に失敗しました: ${error}`);
       }
     }
+  },
+
+  // Concept Mode Actions
+  addConceptKey: (key) => {
+    const { conceptKeys } = get();
+    set({ conceptKeys: [...conceptKeys, key] });
+  },
+
+  updateConceptKey: (id, updates) => {
+    const { conceptKeys } = get();
+    const newKeys = conceptKeys.map(k =>
+      k.id === id ? { ...k, ...updates } : k
+    );
+    set({ conceptKeys: newKeys });
+  },
+
+  deleteConceptKey: (id) => {
+    const { conceptKeys } = get();
+    set({ conceptKeys: conceptKeys.filter(k => k.id !== id) });
+  },
+
+  setConceptKeyLabel: (id, layerIndex, keycode) => {
+    const { conceptKeys } = get();
+    const newKeys = conceptKeys.map(k => {
+      if (k.id === id) {
+        const newLabels = [...k.labels];
+        newLabels[layerIndex] = keycode;
+        return { ...k, labels: newLabels };
+      }
+      return k;
+    });
+    set({ conceptKeys: newKeys });
   },
 }));
 

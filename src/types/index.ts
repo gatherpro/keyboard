@@ -1,3 +1,9 @@
+// Editor Mode
+export type EditorMode = 'device' | 'concept';
+
+// Key Label Style (刻印の分割パターン)
+export type KeyLabelStyle = '1' | '2' | '4';
+
 // QMK Keyboard Types
 
 export interface KeyPosition {
@@ -6,6 +12,18 @@ export interface KeyPosition {
   y: number; // Physical Y position
   w?: number; // Key width (optional, default 1)
   h?: number; // Key height (optional, default 1)
+}
+
+// Concept Mode Key (構想モード用のキー定義)
+export interface ConceptKey {
+  id: string; // Unique identifier
+  x: number; // Physical X position
+  y: number; // Physical Y position
+  w: number; // Key width
+  h: number; // Key height
+  color: string; // Background color (hex)
+  labelStyle: KeyLabelStyle; // 1/2/4分割
+  labels: string[]; // [main, layer1, layer2, layer3] のキーコード
 }
 
 export interface KeyboardLayout {
@@ -41,10 +59,16 @@ export interface ParsedKeymap {
 // Store State Types
 
 export interface EditorState {
-  // Files
+  // Mode
+  editorMode: EditorMode;
+
+  // Files (Device Mode)
   keyboardJson: KeyboardJson | null;
   keymapC: string | null;
   parsedKeymap: ParsedKeymap | null;
+
+  // Concept Mode
+  conceptKeys: ConceptKey[];
 
   // Editor state
   currentLayerIndex: number;
@@ -53,6 +77,9 @@ export interface EditorState {
 
   // Macro state
   macros: Macro[];
+
+  // Mode Actions
+  setEditorMode: (mode: EditorMode) => void;
 
   // Actions
   loadKeyboardJson: (json: KeyboardJson) => void;
@@ -71,6 +98,12 @@ export interface EditorState {
   loadMacrosFromVIA: () => Promise<void>;
   saveMacro: (id: number, name: string, text: string) => Promise<void>;
   deleteMacro: (id: number) => Promise<void>;
+
+  // Concept Mode Actions
+  addConceptKey: (key: ConceptKey) => void;
+  updateConceptKey: (id: string, updates: Partial<ConceptKey>) => void;
+  deleteConceptKey: (id: string) => void;
+  setConceptKeyLabel: (id: string, layerIndex: number, keycode: string) => void;
 }
 
 // QMK Keycode categories
